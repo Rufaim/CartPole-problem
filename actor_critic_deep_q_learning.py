@@ -225,3 +225,9 @@ class ActorCriticModel(object):
 			# Update target networks
 			self.actor.update_target_network()
 			self.critic.update_target_network()
+
+	def initialazer(self,S,A,R,S1):
+		self.sess.run(tf.global_variables_initializer())
+
+		self.actor.update_target_network()
+		self.critic.update_target_network()
