@@ -28,7 +28,6 @@ class ActorNetwork(object):
 		# Target Network
 		self.target_inputs, self.target_scaled_out, self.target_network_params = \
 							self._create_actor_network("target")
-				
 		# Op for periodically updating target network with online network
 		# weights
 		self.update_target_network_params = \
@@ -49,13 +48,15 @@ class ActorNetwork(object):
 		inputs = self._get_inputs()
 		params = []
 		net = inputs
+
 		with tf.variable_scope(self.scope):
 			for layer in self.net_structure:
 				net, p_list = layer(sub_scope,net)
 				params.extend(p_list)
-			# Scale output to -action_bound to action_bound
-			out, p_list = DenseLayer(self.a_dim,activation=tf.nn.sigmoid)(sub_scope,net)
+			out, p_list = DenseLayer(self.a_dim,activation=tf.nn.tanh,w_init=tf.random_uniform_initializer(minval=-0.003, maxval=0.003))(sub_scope,net)
 			params.extend(p_list)
+
+			# Scale output to -action_bound to action_bound
 			scaled_out = tf.multiply(out, self.action_bound)
 		return inputs, scaled_out, params
 
@@ -134,7 +135,7 @@ class CriticNetwork(object):
 				net, p_list = layer(sub_scope,net)
 				params.extend(p_list)
 
-			out, p_list = DenseLayer(1, activation=tf.nn.relu)(sub_scope,net)
+			out, p_list = DenseLayer(1,w_init=tf.random_uniform_initializer(minval=-0.003, maxval=0.003))(sub_scope,net)
 			params.extend(p_list)
 		return inputs, action, out, params
 
@@ -166,6 +167,8 @@ class CriticNetwork(object):
 	def update_target_network(self):
 		self.sess.run(self.update_target_network_params)
 
+
+
 class ActorCriticModel(object):
 	def __init__(self,sess,action_bound,actor_learning_rate,
 				critic_learning_rate,DF,
@@ -186,7 +189,7 @@ class ActorCriticModel(object):
 
 
 	def forward_pass(self,S):		
-		if np.random.rand()<=self.p_rand_action:
+		if np.random.rand()<self.p_rand_action:
 			action = self.actor.action_bound*(2*np.random.rand(self.actor.a_dim)-1)
 		else:
 			action = self.actor.predict(S)[0]
@@ -220,6 +223,9 @@ class ActorCriticModel(object):
 			# Update target networks
 			self.actor.update_target_network()
 			self.critic.update_target_network()
+			return np.amax(predicted_q_value)
+		else:
+			return 0
 
 	def initialazer(self):
 		self.sess.run(tf.global_variables_initializer())
