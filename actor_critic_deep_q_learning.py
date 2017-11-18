@@ -7,7 +7,7 @@ from nn_layers import DenseLayer
 class ActorNetwork(object):
 
 	def __init__(self, sess, state_size, action_size, net_structure,
-						action_bound, learning_rate, tau):
+						action_bound, learning_rate, tau, batch_size):
 		"""
 		net_structure is list of tuples (num_neirons, activation)
 		tau is exponential decay coeffecient
@@ -19,6 +19,7 @@ class ActorNetwork(object):
 		self.action_bound = action_bound
 		self.learning_rate = learning_rate
 		self.tau = tau
+		self.batch_size = batch_size
 		self.scope = "actor"
 
 		# Actor Network
@@ -37,8 +38,9 @@ class ActorNetwork(object):
 		# This gradient will be provided by the critic network
 		self.action_gradient = tf.placeholder(tf.float32, [None, self.a_dim])
 		# Combine the gradients here
-		actor_gradients = tf.gradients(
+		actor_gradient = tf.gradients(
 			self.scaled_out, self.network_params, -self.action_gradient)
+		actor_gradients = list(map(lambda x: tf.div(x, self.batch_size), actor_gradient))
 		# Optimization Op
 		self.optimize = tf.train.AdamOptimizer(self.learning_rate).\
 				apply_gradients(zip(actor_gradients, self.network_params))
@@ -180,7 +182,7 @@ class ActorCriticModel(object):
 		self.critic = CriticNetwork(sess, state_vec_size, action_vec_size, critic_net_structure,
 			 					critic_learning_rate, tau)
 		self.actor = ActorNetwork(sess, state_vec_size, action_vec_size, actor_net_structure,
-						action_bound, actor_learning_rate, tau)
+						action_bound, actor_learning_rate, tau, batch_size)
 
 
 	def forward_pass(self,S):		
