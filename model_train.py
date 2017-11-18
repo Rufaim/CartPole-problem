@@ -23,10 +23,10 @@ ACTOR_NET_STRUCTURE = [DenseLayer(150,tf.nn.relu),DenseLayer(100,tf.nn.relu)]
 
 def build_summaries():
 	cum_episode_reward = tf.Variable(0.)
-	tf.summary.scalar("Cumulative reward", cum_episode_reward)
+	tf.summary.scalar("Cumulative_reward", cum_episode_reward)
 
 	episode_length = tf.Variable(0.)
-	tf.summary.scalar("Episode length", episode_length)
+	tf.summary.scalar("Episode_length", episode_length)
 	
 	summary_vars = [cum_episode_reward,episode_length]
 	summary_ops = tf.summary.merge_all()
@@ -36,7 +36,7 @@ def build_summaries():
 
 with tf.Session() as sess:
 	
-	env = gym.make("CartPole-v1")
+	env = gym.make('Pendulum-v0')
 
 	summary_ops, summary_vars = build_summaries()
 	writer = tf.summary.FileWriter("logdir", sess.graph)
@@ -56,25 +56,26 @@ with tf.Session() as sess:
 		ep_reward = 0
 
 		for j in range(MAX_EP_STEPS):
-			a = model.forward_pass(np.reshape(state, (1, state_dim)))
-			next_state, r, terminal, info = env.step(a[0])
-			model.add_to_buffer(state,a[0],r,terminal,next_state)
+			state = state.reshape( (state_dim,) )
+			a = model.forward_pass(state)
+			next_state, r, terminal, info = env.step(a)
+			next_state = next_state.reshape( (state_dim,) )
+			model.add_to_buffer(state,a,r,terminal,next_state)
 
 			model.update()
 
-			state = next_state
+			state = next_state.copy()
 			ep_reward += r
 
 			if terminal:
-				summary_str = sess.run(summary_ops, feed_dict={
-					summary_vars[0]: ep_reward,
-					summary_vars[1]: j
-				})
-
-				writer.add_summary(summary_str, i)
-				writer.flush()
-
-				print('| Reward: {:.2f} | Episode: {:d} | Qmax: {:.4f}'.format(ep_reward, i))
 				break
+		summary_str = sess.run(summary_ops, feed_dict={
+			summary_vars[0]: ep_reward,
+			summary_vars[1]: j
+		})
 
+		writer.add_summary(summary_str, i)
+		writer.flush()
+
+		print('| Reward: {:.2f} | Episode: {:d}'.format(ep_reward, i))
 	env.close()

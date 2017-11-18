@@ -185,9 +185,9 @@ class ActorCriticModel(object):
 
 	def forward_pass(self,S):		
 		if np.random.rand()<=self.p_rand_action:
-			action = self.actor.action_bound*(2*np.random.rand()-1)
+			action = self.actor.action_bound*(2*np.random.rand(self.actor.a_dim)-1)
 		else:
-			action = self.actor.predict(S)
+			action = self.actor.predict(S)[0]
 		return action
 
 	def add_to_buffer(self,S,A,R,T,S1):
@@ -202,8 +202,8 @@ class ActorCriticModel(object):
 			target_q = self.critic.predict_target(s1_batch,
 								self.actor.predict_target(s1_batch))
 
-			y_i = r_batch.copy()
-			target_q.reshape((self.batch_size, ))
+			y_i = r_batch
+			target_q = target_q.reshape((self.batch_size, ))
 			y_i[~t_batch] += self.DF * target_q[~t_batch]
 
 			# Update the critic given the targets
