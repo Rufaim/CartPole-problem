@@ -183,22 +183,15 @@ class ActorCriticModel(object):
 						action_bound, actor_learning_rate, tau)
 
 
-	def forward_pass(self,S,last_s,last_a,last_R,last_terminal):
-		
-		self.RB.add(last_s,last_a,last_R,last_terminal,S)
-		self.update()
-		
+	def forward_pass(self,S):		
 		if np.random.rand()<=self.p_rand_action:
-			a = self.actor.action_bound*(2*np.random.rand()-1)
+			action = self.actor.action_bound*(2*np.random.rand()-1)
 		else:
-			a = self.actor.predict(S)
+			action = self.actor.predict(S)
+		return action
 
-		action, leverage = self.actions_leveredge_converter(a) 
-		
-		self._last_a = a
-		self._last_s = S
-		
-		return action, leverage
+	def add_to_buffer(self,S,A,R,T,S1):
+		self.RB.add(S,A,R,T,S1)
 	
 	def update(self):
 		if self.RB.size >= self.batch_size:
