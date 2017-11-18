@@ -135,7 +135,7 @@ class CriticNetwork(object):
 				net, p_list = layer(sub_scope,net)
 				params.extend(p_list)
 
-			out, p_list = DenseLayer(1,w_init=tf.random_uniform_initializer(minval=-0.003, maxval=0.003))(sub_scope,net)
+			out, p_list = DenseLayer(1,w_init=tf.random_uniform_initializer(minval=-0.0003, maxval=0.0003))(sub_scope,net)
 			params.extend(p_list)
 		return inputs, action, out, params
 
