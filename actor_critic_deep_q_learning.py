@@ -164,4 +164,64 @@ class CriticNetwork(object):
 	def update_target_network(self):
 		self.sess.run(self.update_target_network_params)
 
+class ActorCriticModel(object):
+	def __init__(self,sess,action_bound,learning_rate,DF,
+				state_vec_size,action_vec_size,
+				critic_net_structure,actor_net_structure,
+				tau=0.01,batch_size=180,
+				base_len=-1,p_rand_action=0.05):
+		self.sess = sess
+		self.DF = DF
+		self.batch_size = batch_size
+		self.p_rand_action = p_rand_action
+		self.RB = ReplayBuffer(base_len)
+
+		self.critic = CriticNetwork(sess, state_vec_size, action_vec_size, critic_net_structure,
+			 					learning_rate, tau)
+		self.actor = ActorNetwork(sess, state_vec_size, action_vec_size, actor_net_structure,
+						action_bound, learning_rate, tau)
+
+		self._last_s = None
+		self._last_a = None
+		self._last_r = None
+
+	def forward_pass(self,S,last_a,last_R,training=False):
 		
+		self.RB.add(self._last_s,last_a,last_R,S)
+		self.update()
+		
+		if np.random.rand()<=self.p_rand_action:
+			a = self.actor.action_bound*(2*np.random.rand()-1)
+		else:
+			a = self.actor.predict(S)
+
+		action, leverage = self.actions_leveredge_converter(a) 
+		
+		self._last_a = a
+		self._last_s = S
+		
+		return action, leverage
+	
+	def update(self):
+		if self.RB.size >= self.batch_size:
+			s_batch, a_batch, r_batch, s1_batch = \
+					self.RB.sample_batch(self.batch_size)
+
+			# Calculate targets
+			target_q = self.critic.predict_target(s1_batch,
+								self.actor.predict_target(s1_batch))
+
+			y_i = r_batch + self.DF * np.reshape(target_q, (self.batch_size, ))
+
+			# Update the critic given the targets
+			predicted_q_value, _ = self.critic.train(s_batch, 
+								a_batch, np.reshape(y_i, (self.batch_size, 1)))
+
+			# Update the actor policy using the sampled gradient
+			a_outs = self.actor.predict(s_batch)
+			grads = self.critic.action_gradients(s_batch, a_outs)
+			self.actor.train(s_batch, grads[0])
+
+			# Update target networks
+			self.actor.update_target_network()
+			self.critic.update_target_network()
