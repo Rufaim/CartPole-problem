@@ -165,7 +165,8 @@ class CriticNetwork(object):
 		self.sess.run(self.update_target_network_params)
 
 class ActorCriticModel(object):
-	def __init__(self,sess,action_bound,learning_rate,DF,
+	def __init__(self,sess,action_bound,actor_learning_rate,
+				critic_learning_rate,DF,
 				state_vec_size,action_vec_size,
 				critic_net_structure,actor_net_structure,
 				tau=0.01,batch_size=180,
@@ -177,9 +178,9 @@ class ActorCriticModel(object):
 		self.RB = ReplayBuffer(base_len)
 
 		self.critic = CriticNetwork(sess, state_vec_size, action_vec_size, critic_net_structure,
-			 					learning_rate, tau)
+			 					critic_learning_rate, tau)
 		self.actor = ActorNetwork(sess, state_vec_size, action_vec_size, actor_net_structure,
-						action_bound, learning_rate, tau)
+						action_bound, actor_learning_rate, tau)
 
 		self._last_s = None
 		self._last_a = None
