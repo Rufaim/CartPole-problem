@@ -182,13 +182,10 @@ class ActorCriticModel(object):
 		self.actor = ActorNetwork(sess, state_vec_size, action_vec_size, actor_net_structure,
 						action_bound, actor_learning_rate, tau)
 
-		self._last_s = None
-		self._last_a = None
-		self._last_r = None
 
-	def forward_pass(self,S,last_a,last_R,training=False):
+	def forward_pass(self,S,last_s,last_a,last_R,last_terminal):
 		
-		self.RB.add(self._last_s,last_a,last_R,S)
+		self.RB.add(last_s,last_a,last_R,last_terminal,S)
 		self.update()
 		
 		if np.random.rand()<=self.p_rand_action:
@@ -205,14 +202,16 @@ class ActorCriticModel(object):
 	
 	def update(self):
 		if self.RB.size >= self.batch_size:
-			s_batch, a_batch, r_batch, s1_batch = \
+			s_batch, a_batch, r_batch, t_batch, s1_batch = \
 					self.RB.sample_batch(self.batch_size)
 
 			# Calculate targets
 			target_q = self.critic.predict_target(s1_batch,
 								self.actor.predict_target(s1_batch))
 
-			y_i = r_batch + self.DF * np.reshape(target_q, (self.batch_size, ))
+			y_i = r_batch.copy()
+			target_q.reshape((self.batch_size, ))
+			y_i[~t_batch] += self.DF * target_q[~t_batch]
 
 			# Update the critic given the targets
 			predicted_q_value, _ = self.critic.train(s_batch, 
@@ -227,7 +226,7 @@ class ActorCriticModel(object):
 			self.actor.update_target_network()
 			self.critic.update_target_network()
 
-	def initialazer(self,S,A,R,S1):
+	def initialazer(self):
 		self.sess.run(tf.global_variables_initializer())
 
 		self.actor.update_target_network()

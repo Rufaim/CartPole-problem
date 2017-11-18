@@ -42,8 +42,7 @@ with tf.Session() as sess:
 							CRITIC_NET_STRUCTURE,ACTOR_NET_STRUCTURE,
 							TAU,MINIBATCH_SIZE,BUFFER_SIZE,p_rand_action=0.05)
 
-	"""
-	train code here
-	"""
+	model.initialazer()
 
+	
 	env.close()
