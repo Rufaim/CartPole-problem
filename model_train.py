@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import gym
-from nn_layers import DenseLayer, DenseLayerConcat
+from nn_layers import DenseLayer, DenseLayerConcat, BatchNormalization
 from actor_critic_deep_q_learning import ActorCriticModel
 
 
@@ -17,8 +17,8 @@ CRITIC_LEARNING_RATE = 0.001
 BUFFER_SIZE = 1000000 
 DISCOUNT_FACTOR = 0.99
 P_RAND_ACTION = 0.05
-CRITIC_NET_STRUCTURE = [DenseLayer(300,tf.nn.relu),DenseLayerConcat(400,tf.nn.relu)]
-ACTOR_NET_STRUCTURE = [DenseLayer(300,tf.nn.relu),DenseLayer(400,tf.nn.relu)]
+CRITIC_NET_STRUCTURE = [DenseLayer(300,tf.nn.relu,norm=BatchNormalization(axis=[0,1])),DenseLayerConcat(400,tf.nn.relu)]
+ACTOR_NET_STRUCTURE = [DenseLayer(300,tf.nn.relu,norm=BatchNormalization(axis=[0,1])),DenseLayer(400,tf.nn.relu)]
 
 
 def build_summaries():
