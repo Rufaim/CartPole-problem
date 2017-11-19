@@ -6,19 +6,19 @@ from actor_critic_deep_q_learning import ActorCriticModel
 
 
 # Train constants
-MINIBATCH_SIZE = 60
+MINIBATCH_SIZE = 200
 MAX_EPISODES = 5000
 MAX_EP_STEPS = 1000
 
 # Model constants
 TAU = 0.001
-ACTOR_LEARNING_RATE = 0.0001
+ACTOR_LEARNING_RATE = 0.0001 
 CRITIC_LEARNING_RATE = 0.001
 BUFFER_SIZE = 1000000 
-DISCOUNT_FACTOR = 0.99
+DISCOUNT_FACTOR = 0.95
 P_RAND_ACTION = 0.05
-CRITIC_NET_STRUCTURE = [DenseLayer(300,tf.nn.relu,norm=BatchNormalization(axis=[0,1])),DenseLayerConcat(400,tf.nn.relu)]
-ACTOR_NET_STRUCTURE = [DenseLayer(300,tf.nn.relu,norm=BatchNormalization(axis=[0,1])),DenseLayer(400,tf.nn.relu)]
+CRITIC_NET_STRUCTURE = [DenseLayer(300,tf.nn.relu,norm=BatchNormalization(axis=[0,1])),DenseLayerConcat(400,tf.nn.relu),DenseLayer(350,tf.nn.relu)]
+ACTOR_NET_STRUCTURE = [DenseLayer(300,tf.nn.relu,norm=BatchNormalization(axis=[0,1])),DenseLayer(400,tf.nn.relu),DenseLayer(300,tf.nn.relu)]
 
 
 def build_summaries():
