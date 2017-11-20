@@ -25,7 +25,7 @@ class DenseLayer(Layer):
 			sigm = tf.matmul(input,W)+b
 
 			if self.norm is not None:
-				sigm, p = self.norm(scope,sigm)
+				sigm, p = self.norm(sigm)
 				params.extend(p)
 
 			out = self.activation(sigm,name=self.name)
@@ -52,7 +52,7 @@ class DenseLayerConcat(DenseLayer):
 			sigm = tf.matmul(input1, W_1) + tf.matmul(input2, W_2) + b
 
 			if self.norm is not None:
-				sigm, p = self.norm(scope,sigm)
+				sigm, p = self.norm(sigm)
 				params.extend(p)
 
 			out = self.activation(sigm, name=self.name)

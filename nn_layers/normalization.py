@@ -10,13 +10,12 @@ class BatchNormalization(object):
 		self.axis = axis
 		self.name = name
 	
-	def  __call__(self, scope, input):
+	def  __call__(self, input):
 		TShape = input.shape
 
-		with tf.variable_scope(scope):
-			beta = tf.Variable(self.beta_init(TShape[-1:]))
-			gamma = tf.Variable(self.gamma_init(TShape[-1:]))
+		beta = tf.Variable(self.beta_init(TShape[-1:]))
+		gamma = tf.Variable(self.gamma_init(TShape[-1:]))
 
-			mean, variance = tf.nn.moments(input, self.axis)
-			out = tf.nn.batch_normalization(input, mean, variance, beta, gamma, self.epsilon)
-			return out, [beta, gamma]
+		mean, variance = tf.nn.moments(input, self.axis)
+		out = tf.nn.batch_normalization(input, mean, variance, beta, gamma, self.epsilon)
+		return out, [beta, gamma]
