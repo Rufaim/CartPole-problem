@@ -1,5 +1,4 @@
 import tensorflow as tf
-import numpy as np
 import gym
 from nn_layers import DenseLayer, DenseLayerConcat, BatchNormalization
 from actor_critic_deep_q_learning import ActorCriticModel
@@ -23,16 +22,16 @@ ACTOR_NET_STRUCTURE = [DenseLayer(300,tf.nn.relu,norm=BatchNormalization(axis=[0
 
 def build_summaries():
 	cum_episode_reward = tf.Variable(0.)
-	tf.summary.scalar("Cumulative_reward", cum_episode_reward)
-
-	episode_length = tf.Variable(0.)
-	tf.summary.scalar("Episode_length", episode_length)
+	cum_episode_reward_summ = tf.summary.scalar("Cumulative_reward", cum_episode_reward)
 
 	episode_ave_max_q = tf.Variable(0.)
-	tf.summary.scalar("Qmax_Value", episode_ave_max_q)
+	episode_ave_max_q_summ = tf.summary.scalar("Qmax_Value", episode_ave_max_q)
+
+	reward_full = tf.Variable(0.)
+	reward_full_summ = tf.summary.scalar("reward plot", reward_full)
 	
-	summary_vars = [cum_episode_reward,episode_length,episode_ave_max_q]
-	summary_ops = tf.summary.merge_all()
+	summary_vars = [cum_episode_reward,episode_ave_max_q,reward_full]
+	summary_ops = [tf.summary.merge([cum_episode_reward_summ,episode_ave_max_q_summ]), reward_full_summ]
 
 	return summary_ops, summary_vars
 
@@ -67,6 +66,9 @@ with tf.Session() as sess:
 			next_state = next_state.reshape( (state_dim,) )
 			model.add_to_buffer(state,a,r,terminal,next_state)
 
+			summary_str = sess.run(summary_ops[1], feed_dict={summary_vars[2]: r})
+			writer.add_summary(summary_str, i*MAX_EP_STEPS +j)
+
 			max_q = model.update()
 
 			state = next_state.copy()
@@ -75,10 +77,9 @@ with tf.Session() as sess:
 
 			if terminal:
 				break
-		summary_str = sess.run(summary_ops, feed_dict={
+		summary_str = sess.run(summary_ops[0], feed_dict={
 			summary_vars[0]: ep_reward,
-			summary_vars[1]: j,
-			summary_vars[2]: ep_ave_max_q
+			summary_vars[1]: ep_ave_max_q
 		})
 
 		writer.add_summary(summary_str, i)
