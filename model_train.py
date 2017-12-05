@@ -6,7 +6,7 @@ from actor_critic_deep_q_learning import ActorCriticModel
 
 # Train constants
 MINIBATCH_SIZE = 200
-MAX_EPISODES = 5000
+MAX_EPISODES = 1000
 MAX_EP_STEPS = 1000
 
 # Model constants
@@ -41,7 +41,7 @@ with tf.Session() as sess:
 	env = gym.make('Pendulum-v0')
 
 	summary_ops, summary_vars = build_summaries()
-	writer = tf.summary.FileWriter("logdir", sess.graph)
+	writer = tf.summary.FileWriter("logdir")
 
 	state_dim = env.observation_space.shape[0]
 	action_dim = env.action_space.shape[0]
@@ -53,6 +53,7 @@ with tf.Session() as sess:
 							TAU,MINIBATCH_SIZE,BUFFER_SIZE,p_rand_action=P_RAND_ACTION)
 
 	model.initialazer()
+	writer.add_graph(sess.graph)
 
 	for i in range(MAX_EPISODES):
 		state = env.reset()
