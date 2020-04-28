@@ -98,3 +98,4 @@ class DeepDeterministicPolicyGradients(object):
 
         for v2, v1 in zip(self.target_critic_net.trainable_variables, self.critic_net.trainable_variables):
             v2.assign(self.critic_net.tau * v1 + (1 - self.critic_net.tau) * v2)
+

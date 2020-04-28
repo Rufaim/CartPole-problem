@@ -8,7 +8,8 @@ class ActorNet(tf.keras.Model):
     def __init__(self, net_structure, action_bounds, tau, learning_rate):
         super(ActorNet, self).__init__()
         self.net_structure = net_structure
-        self.action_bounds = tf.constant(action_bounds, shape=[1, len(action_bounds)], dtype=tf.float32)
+        action_bounds = tf.convert_to_tensor(action_bounds, dtype=tf.float32)
+        self.action_bounds = tf.constant(action_bounds, shape=[1, action_bounds.shape[-1]], dtype=tf.float32)
         self.tau = tf.constant(tau, dtype=tf.float32)
         self.learning_rate = learning_rate
 
@@ -27,7 +28,7 @@ class ActorNet(tf.keras.Model):
 
     def clone(self):
         structure = clone_net_structure(self.net_structure)
-        return ActorNet(structure, self.action_bounds, self.tau, self.learning_rate)
+        return ActorNet(structure, self.action_bounds[0], self.tau, self.learning_rate)
 
 
 class CriticNet(tf.keras.Model):
@@ -58,3 +59,4 @@ class CriticNet(tf.keras.Model):
     def clone(self):
         structure = clone_net_structure(self.net_structure)
         return CriticNet(structure, self.tau, self.learning_rate, self.grad_norm)
+
